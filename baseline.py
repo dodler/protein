@@ -235,7 +235,7 @@ model.fc = nn.Sequential(
 )
 
 MODEL_NAME='resnet50'
-BATCH_SIZE=24
+BATCH_SIZE=16
 DEVICE=0
 EPOCHS=200
 
@@ -253,13 +253,6 @@ val_loader = torch.utils.data.DataLoader(val_ds,batch_size=BATCH_SIZE)
 
 
 trainer.output_watcher = None
-
-ct = 0
-for child in model.children():
-    ct += 1
-    if ct < 7:
-        for param in child.parameters():
-            param.requires_grad = False
 model.to(DEVICE)
 
 
