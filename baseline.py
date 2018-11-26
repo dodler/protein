@@ -4,7 +4,7 @@
 # In[ ]:
 
 
-from torchvision.models.resnet import resnet50
+from torchvision.models.resnet import resnet50, resnet152
 import torch
 import torch.nn as nn
 from training.training import Trainer
@@ -219,7 +219,7 @@ def myloss(pred, target):
 # In[ ]:
 
 
-model = resnet50(pretrained=True)
+model = resnet152(pretrained=True)
 w = model.conv1.weight
 model.conv1 = nn.Conv2d(4,64,kernel_size=(7,7),stride=(2,2),padding=(3, 3), bias=False)
 model.conv1.weight = torch.nn.Parameter(torch.cat((w,torch.mean(w,dim=1).unsqueeze(1)),dim=1))
@@ -229,13 +229,14 @@ model.avgpool = nn.Sequential(
     nn.AvgPool2d(kernel_size=5, stride=2,padding=0)
 )
 model.fc = nn.Sequential(
-    nn.Linear(model.fc.in_features, 256),
-    nn.Dropout(0.5),
-    nn.Linear(256, 28)
-)
+    nn.Linear(model.fc.in_features, 28))
 
-MODEL_NAME='resnet50'
-BATCH_SIZE=24
+model = torch.nn.DataParallel(model)
+model.load_state_dict(torch.load('resnet152_best.pth.tar'))
+#model = torch.nn.DataParallel(model)
+
+MODEL_NAME='resnet152'
+BATCH_SIZE=12
 DEVICE=0
 EPOCHS=200
 
@@ -245,21 +246,14 @@ val_ds = ProteinDataset(val_names, TRAIN, val_aug)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 trainer = Trainer(myloss, mymetric, optimizer, MODEL_NAME, None, DEVICE)
 
-train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE,shuffle=True)
-val_loader = torch.utils.data.DataLoader(val_ds,batch_size=BATCH_SIZE)
+train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE,shuffle=True, num_workers=0)
+val_loader = torch.utils.data.DataLoader(val_ds,batch_size=BATCH_SIZE, num_workers=0)
 
 
 # In[ ]:
 
 
 trainer.output_watcher = None
-
-ct = 0
-for child in model.children():
-    ct += 1
-    if ct < 7:
-        for param in child.parameters():
-            param.requires_grad = False
 model.to(DEVICE)
 
 
