@@ -205,13 +205,10 @@ def get_se_resnet152():
         nn.MaxPool2d(kernel_size=6, stride=2,padding=0),
         nn.AvgPool2d(kernel_size=5, stride=2,padding=0)
     )
-    model.fc = nn.Sequential(
-        nn.Linear(model.fc.in_features, 512),
-        nn.Dropout(),
-        nn.Linear(512, 28))
+    model.fc = nn.Linear(model.fc.in_features, 28)
     
     model = nn.DataParallel(model)
-    model.load_state_dict(torch.load('se_resnet152_best.pth.tar'))
+    #model.load_state_dict(torch.load('se_resnet152_best.pth.tar'))
 
     return model
 
@@ -226,7 +223,7 @@ def get_model(name):
 MODEL_NAME='se_resnet152'
 BATCH_SIZE=10
 DEVICE=0
-EPOCHS=200
+EPOCHS=100
 
 model = get_model(MODEL_NAME)
 
