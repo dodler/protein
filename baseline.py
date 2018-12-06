@@ -131,8 +131,9 @@ class MyWatcher:
         self.watcher.display_and_add(input.detach().squeeze(0).cpu().numpy()[0], 'input_image')
         labels = target.detach().cpu().numpy()[0]
         result = ""
-        for l in labels:
-            result += (name_label_dict[l] + '\n')
+        for i,l in enumerate(labels):
+            if l == 1:
+                result += (name_label_dict[i] + '\n')
 
         self.watcher.text_and_add(result, 'input_labels')
 
