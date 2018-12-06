@@ -129,7 +129,7 @@ class MyWatcher:
         self.watcher = watcher
 
     def __call__(self, input, output, target):
-        self.watcher.display_img_and_add(input, 'input_image')
+        self.watcher.display_and_add(input, 'input_image')
 
 def main(config):
     MODEL_NAME = config['name']
