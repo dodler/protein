@@ -1,7 +1,5 @@
 # coding: utf-8
-import gc
 import os
-import pickle
 import sys
 
 import cv2
@@ -19,11 +17,9 @@ from albumentations import (
     RandomGamma,
     Resize)
 from sklearn.model_selection import train_test_split
-from torchvision.models.resnet import resnet152
 from training.training import Trainer
 
 from models import get_model
-from se_resnet import se_resnet152
 from utils import name_label_dict, parse_config
 
 torch.manual_seed(42)
@@ -133,6 +129,13 @@ class MyWatcher:
     def __call__(self, input, output, target):
         self.cnt += 1
         self.watcher.display_and_add(input.detach().squeeze(0).cpu().numpy()[0], 'input_image')
+        labels = target.detach().cpu().numpy()[0]
+        result = ""
+        for l in labels:
+            result += (name_label_dict[l] + '\n')
+
+        self.watcher.text_and_add(result, 'input_labels')
+
 
 
 def main(config):
