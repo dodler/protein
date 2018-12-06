@@ -129,7 +129,7 @@ class MyWatcher:
     def __call__(self, input, output, target):
         self.cnt += 1
         self.watcher.display_and_add(input.detach().squeeze(0).cpu().numpy()[0], 'input_image')
-        labels = target.detach().cpu().numpy()[0]
+        labels = output.detach().cpu().numpy()[0]
         result = ""
         for i,l in enumerate(labels):
             if l == 1:
