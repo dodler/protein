@@ -124,12 +124,16 @@ def mymetric(pred, target):
 def myloss(pred, target):
     return loss(pred, target)
 
+
 class MyWatcher:
     def __init__(self, watcher):
         self.watcher = watcher
+        self.cnt = 0
 
     def __call__(self, input, output, target):
-        self.watcher.display_and_add(input, 'input_image')
+        self.cnt += 1
+        self.watcher.display_every_iter(self.cnt, input, None, None, 'input_image')
+
 
 def main(config):
     MODEL_NAME = config['name']
