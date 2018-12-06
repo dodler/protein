@@ -133,18 +133,20 @@ class MyWatcher:
 
 def main(config):
     MODEL_NAME = config['name']
-    BATCH_SIZE = config['batch_size']
-    DEVICE = config['device']
-    EPOCHS = config['epochs']
+    BATCH_SIZE = int(config['batch_size'])
+    DEVICE = int(config['device'])
+    EPOCHS = int(config['epochs'])
+    LR = float(config['lr'])
+    WORKERS = int(config['num_workers'])
 
     model = get_model(MODEL_NAME)
     train_ds = ProteinDataset(train_names, TRAIN)
     val_ds = ProteinDataset(val_names, TRAIN, val_aug)
-    optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'])
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR)
     trainer = Trainer(myloss, mymetric, optimizer, MODEL_NAME, None, DEVICE)
 
-    train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=config['num_workers'])
-    val_loader = torch.utils.data.DataLoader(val_ds, batch_size=BATCH_SIZE, num_workers=config['num_workers'])
+    train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
+    val_loader = torch.utils.data.DataLoader(val_ds, batch_size=BATCH_SIZE, num_workers=WORKERS)
 
     trainer.output_watcher = MyWatcher()
     model.to(DEVICE)
