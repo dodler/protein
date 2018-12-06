@@ -132,7 +132,7 @@ class MyWatcher:
 
     def __call__(self, input, output, target):
         self.cnt += 1
-        self.watcher.display_every_iter(self.cnt, input, None, None, 'input_image')
+        self.watcher.display_and_add(input.detach().squeeze(0).cpu().numpy()[0], 'input_image')
 
 
 def main(config):
