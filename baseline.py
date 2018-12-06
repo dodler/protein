@@ -133,7 +133,7 @@ class MyWatcher:
         result = ""
         for i,l in enumerate(labels):
             if l == 1:
-                result += (name_label_dict[i] + '\n')
+                result += (name_label_dict[i] + '|')
 
         self.watcher.text_and_add(result, 'input_labels')
 
