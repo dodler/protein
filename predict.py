@@ -1,65 +1,18 @@
-from models import get_model
-from prot_dataset import ProteinDataset
-import torch
-import torch.nn as nn
-from training.training import Trainer
-import os.path as osp
 import cv2
 import numpy as np
-import torch.nn.functional as F
+import torch
 from albumentations import (
-    VerticalFlip,
-    HorizontalFlip,
-    Compose,
-    RandomRotate90,
-    ElasticTransform,
-    GridDistortion,
-    OpticalDistortion,
-    OneOf,
-    CLAHE,
-    RandomContrast,
-    RandomGamma,
-    RandomBrightness,
     Resize)
+from models import get_model
+from prot_dataset import ProteinDataset
+
 torch.manual_seed(42)
 np.random.seed(42)
 import pandas as pd
 import numpy as np
 import os
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score
-import scipy.optimize as opt
 from tqdm import *
-
-name_label_dict = {
-0:  'Nucleoplasm',
-1:  'Nuclear membrane',
-2:  'Nucleoli',   
-3:  'Nucleoli fibrillar center',
-4:  'Nuclear speckles',
-5:  'Nuclear bodies',
-6:  'Endoplasmic reticulum',   
-7:  'Golgi apparatus',
-8:  'Peroxisomes',
-9:  'Endosomes',
-10:  'Lysosomes',
-11:  'Intermediate filaments',
-12:  'Actin filaments',
-13:  'Focal adhesion sites',   
-14:  'Microtubules',
-15:  'Microtubule ends',  
-16:  'Cytokinetic bridge',   
-17:  'Mitotic spindle',
-18:  'Microtubule organizing center',  
-19:  'Centrosome',
-20:  'Lipid droplets',
-21:  'Plasma membrane',   
-22:  'Cell junctions', 
-23:  'Mitochondria',
-24:  'Aggresome',
-25:  'Cytosol',
-26:  'Cytoplasmic bodies',   
-27:  'Rods & rings' }
 
 TARGET_SIZE=512
 
