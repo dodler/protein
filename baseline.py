@@ -22,6 +22,7 @@ from sklearn.model_selection import train_test_split
 from torchvision.models.resnet import resnet152
 from training.training import Trainer
 
+from models import get_model
 from se_resnet import se_resnet152
 from utils import name_label_dict, parse_config
 
@@ -123,6 +124,12 @@ def mymetric(pred, target):
 def myloss(pred, target):
     return loss(pred, target)
 
+class MyWatcher:
+    def __init__(self, watcher):
+        self.watcher = watcher
+
+    def __call__(self, input, output, target):
+        self.watcher.display_img_and_add(input, 'input_image')
 
 def main(config):
     MODEL_NAME = config['name']
@@ -139,7 +146,7 @@ def main(config):
     train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=config['num_workers'])
     val_loader = torch.utils.data.DataLoader(val_ds, batch_size=BATCH_SIZE, num_workers=config['num_workers'])
 
-    trainer.output_watcher = None
+    trainer.output_watcher = MyWatcher()
     model.to(DEVICE)
 
     for i in range(EPOCHS):
