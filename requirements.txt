@@ -1,0 +1,9 @@
+PyYAML
+tqdm
+numpy
+torchvision
+scikit-learn
+albumentations
+torch
+pandas
+opencv-python

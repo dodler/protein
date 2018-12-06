@@ -36,7 +36,7 @@ def open_rgby(path,id): #a function that reads RGBY image
 
 val_aug=Resize(height=TARGET_SIZE, width=TARGET_SIZE)
 
-MODEL_NAME='se_resnet152'
+MODEL_NAME='se_resnet152.yaml'
 BATCH_SIZE=10
 DEVICE=0
 EPOCHS=100

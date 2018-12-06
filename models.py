@@ -45,7 +45,7 @@ def get_se_resnet152():
 def get_model(name):
     if name == 'resnet152':
         return get_resnet152()
-    elif name == 'se_resnet152':
+    elif name == 'se_resnet152.yaml':
         return get_se_resnet152()
     else: raise Exception('not supported model')
 
