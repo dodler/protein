@@ -148,7 +148,7 @@ def main(config):
     train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
     val_loader = torch.utils.data.DataLoader(val_ds, batch_size=BATCH_SIZE, num_workers=WORKERS)
 
-    trainer.output_watcher = MyWatcher()
+    trainer.output_watcher = MyWatcher(trainer.watcher)
     model.to(DEVICE)
 
     for i in range(EPOCHS):
