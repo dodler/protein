@@ -87,6 +87,26 @@ def get_se_resnext50():
 def get_senet154():
     model = senet154(pretrained=None)
 
+    inplanes = 128
+    layer0_modules = [
+        ('conv1', nn.Conv2d(4, 64, 3, stride=2, padding=1,
+                            bias=False)),
+        ('bn1', nn.BatchNorm2d(64)),
+        ('relu1', nn.ReLU(inplace=True)),
+        ('conv2', nn.Conv2d(64, 64, 3, stride=1, padding=1,
+                            bias=False)),
+        ('bn2', nn.BatchNorm2d(64)),
+        ('relu2', nn.ReLU(inplace=True)),
+        ('conv3', nn.Conv2d(64, inplanes, 3, stride=1, padding=1,
+                            bias=False)),
+        ('bn3', nn.BatchNorm2d(inplanes)),
+        ('relu3', nn.ReLU(inplace=True)),
+    ]
+    layer0_modules.append(('pool', nn.MaxPool2d(3, stride=2,
+                                                ceil_mode=True)))
+
+    model.layer0 = nn.Sequential(OrderedDict(layer0_modules))
+
     model.last_linear = nn.Sequential(
         nn.Linear(model.last_linear.in_features, 768),
         nn.Dropout(),

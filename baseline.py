@@ -48,10 +48,7 @@ TARGET_SIZE = 512
 
 aug = Compose([
     HorizontalFlip(p=0.7),
-    RandomGamma(p=0.7),
-    GridDistortion(p=0.6),
-    OpticalDistortion(p=0.6),
-    ElasticTransform(p=0.6),
+    RandomGamma(p=0.3),
     Resize(height=TARGET_SIZE, width=TARGET_SIZE)
 ])
 
