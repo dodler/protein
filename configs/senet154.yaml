@@ -1,5 +1,5 @@
 batch_size: 10
-name: se_resnet152
+name: senet154
 epochs: 50
 num_workers: 4
 lr: 2e-2
