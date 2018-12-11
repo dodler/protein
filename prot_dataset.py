@@ -1,6 +1,9 @@
 # coding: utf-8
+import os
+
 import cv2
 import numpy as np
+import pandas as pd
 import torch
 from albumentations import (
     Resize)
@@ -9,10 +12,6 @@ from utils import name_label_dict
 
 torch.manual_seed(42)
 np.random.seed(42)
-
-import pandas as pd
-import numpy as np
-import os
 
 PATH = './'
 TRAIN = '/root/data/protein/train/'

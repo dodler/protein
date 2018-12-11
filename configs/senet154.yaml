@@ -1,0 +1,6 @@
+batch_size: 10
+name: senet154
+epochs: 50
+num_workers: 4
+lr: 2e-2
+device: 0

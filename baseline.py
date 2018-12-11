@@ -1,9 +1,10 @@
 # coding: utf-8
-import gc
-import pickle
+import os
+import sys
 
 import cv2
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,16 +16,11 @@ from albumentations import (
     OpticalDistortion,
     RandomGamma,
     Resize)
-from torchvision.models.resnet import resnet152
+from sklearn.model_selection import train_test_split
 from training.training import Trainer
 
-import pandas as pd
-import numpy as np
-import os
-from sklearn.model_selection import train_test_split
-
-from se_resnet import se_resnet152
-from utils import name_label_dict
+from models import get_model
+from utils import name_label_dict, parse_config
 
 torch.manual_seed(42)
 np.random.seed(42)
@@ -52,10 +48,7 @@ TARGET_SIZE = 512
 
 aug = Compose([
     HorizontalFlip(p=0.7),
-    RandomGamma(p=0.7),
-    GridDistortion(p=0.6),
-    OpticalDistortion(p=0.6),
-    ElasticTransform(p=0.6),
+    RandomGamma(p=0.3),
     Resize(height=TARGET_SIZE, width=TARGET_SIZE)
 ])
 
@@ -75,7 +68,7 @@ class ProteinDataset:
 
     def __getitem__(self, idx):
 
-        if (self.path == TEST):
+        if self.path == TEST:
             label = np.zeros(len(name_label_dict), dtype=np.int)
         else:
             labels = self.labels.loc[self.names[idx]]['Target']
@@ -125,75 +118,52 @@ def myloss(pred, target):
     return loss(pred, target)
 
 
-def get_resnet152():
-    model = resnet152(pretrained=True)
-    w = model.conv1.weight
-    model.conv1 = nn.Conv2d(4, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-    model.conv1.weight = torch.nn.Parameter(torch.cat((w, torch.mean(w, dim=1).unsqueeze(1)), dim=1))
+class MyWatcher:
+    def __init__(self, watcher):
+        self.watcher = watcher
+        self.cnt = 0
 
-    model.avgpool = nn.Sequential(
-        nn.MaxPool2d(kernel_size=6, stride=2, padding=0),
-        nn.AvgPool2d(kernel_size=5, stride=2, padding=0)
-    )
-    model.fc = nn.Sequential(
-        nn.Linear(model.fc.in_features, 28))
+    def __call__(self, input, output, target):
+        self.cnt += 1
+        self.watcher.display_and_add(input.detach().squeeze(0).cpu().numpy()[0], 'input_image')
+        labels = output.detach().cpu().numpy()[0]
+        result = ""
+        for i,l in enumerate(labels):
+            if l == 1:
+                result += (name_label_dict[i] + '|')
 
-    model = torch.nn.DataParallel(model)
-    model.load_state_dict(torch.load('resnet152_best.pth.tar'))
-    return model
-
-
-def get_se_resnet152():
-    model = se_resnet152(num_classes=1000)
-    w = model.conv1.weight
-    model.conv1 = nn.Conv2d(4, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-    model.conv1.weight = torch.nn.Parameter(torch.cat((w, torch.mean(w, dim=1).unsqueeze(1)), dim=1))
-
-    model.avgpool = nn.Sequential(
-        nn.MaxPool2d(kernel_size=6, stride=2, padding=0),
-        nn.AvgPool2d(kernel_size=5, stride=2, padding=0)
-    )
-    model.fc = nn.Linear(model.fc.in_features, 28)
-
-    model = nn.DataParallel(model)
-    # model.load_state_dict(torch.load('se_resnet152_best.pth.tar'))
-
-    return model
+        self.watcher.text_and_add(result, 'input_labels')
 
 
-def get_model(name):
-    if name == 'resnet152':
-        return get_resnet152()
-    elif name == 'se_resnet152':
-        return get_se_resnet152()
-    else:
-        raise Exception('not supported model')
+
+def main(config):
+    MODEL_NAME = config['name']
+    BATCH_SIZE = int(config['batch_size'])
+    DEVICE = int(config['device'])
+    EPOCHS = int(config['epochs'])
+    LR = float(config['lr'])
+    WORKERS = int(config['num_workers'])
+
+    model = get_model(MODEL_NAME)
+    train_ds = ProteinDataset(train_names, TRAIN)
+    val_ds = ProteinDataset(val_names, TRAIN, val_aug)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR)
+    trainer = Trainer(myloss, mymetric, optimizer, MODEL_NAME, None, DEVICE)
+
+    train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
+    val_loader = torch.utils.data.DataLoader(val_ds, batch_size=BATCH_SIZE, num_workers=WORKERS)
+
+    trainer.output_watcher = MyWatcher(trainer.watcher)
+    model.to(DEVICE)
+
+    for i in range(EPOCHS):
+        trainer.train(train_loader, model, i)
+        trainer.validate(val_loader, model)
 
 
-MODEL_NAME = 'se_resnet152'
-BATCH_SIZE = 10
-DEVICE = 0
-EPOCHS = 100
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        raise Exception('run example: python main.py some_conf.yaml')
 
-model = get_model(MODEL_NAME)
-
-train_ds = ProteinDataset(train_names, TRAIN)
-val_ds = ProteinDataset(val_names, TRAIN, val_aug)
-
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-trainer = Trainer(myloss, mymetric, optimizer, MODEL_NAME, None, DEVICE)
-
-train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
-val_loader = torch.utils.data.DataLoader(val_ds, batch_size=BATCH_SIZE, num_workers=4)
-
-trainer.output_watcher = None
-model.to(DEVICE)
-
-for i in range(EPOCHS):
-    trainer.train(train_loader, model, i)
-    trainer.validate(val_loader, model)
-    trainer.full_history = None
-    gc.collect()
-    trainer.full_history = {}
-
-pickle.dump(trainer, open('trainer.pkl', 'wb'))
+    config = parse_config(sys.argv[1])
+    main(config)
