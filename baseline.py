@@ -117,25 +117,6 @@ def mymetric(pred, target):
 def myloss(pred, target):
     return loss(pred, target)
 
-
-class MyWatcher:
-    def __init__(self, watcher):
-        self.watcher = watcher
-        self.cnt = 0
-
-    def __call__(self, input, output, target):
-        self.cnt += 1
-        self.watcher.display_and_add(input.detach().squeeze(0).cpu().numpy()[0], 'input_image')
-        labels = output.detach().cpu().numpy()[0]
-        result = ""
-        for i,l in enumerate(labels):
-            if l == 1:
-                result += (name_label_dict[i] + '|')
-
-        self.watcher.text_and_add(result, 'input_labels')
-
-
-
 def main(config):
     MODEL_NAME = config['name']
     BATCH_SIZE = int(config['batch_size'])
@@ -153,7 +134,6 @@ def main(config):
     train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
     val_loader = torch.utils.data.DataLoader(val_ds, batch_size=BATCH_SIZE, num_workers=WORKERS)
 
-    trainer.output_watcher = MyWatcher(trainer.watcher)
     model.to(DEVICE)
 
     for i in range(EPOCHS):
