@@ -117,6 +117,7 @@ def mymetric(pred, target):
 def myloss(pred, target):
     return loss(pred, target)
 
+
 def main(config):
     MODEL_NAME = config['name']
     BATCH_SIZE = int(config['batch_size'])
@@ -129,7 +130,7 @@ def main(config):
     train_ds = ProteinDataset(train_names, TRAIN)
     val_ds = ProteinDataset(val_names, TRAIN, val_aug)
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
-    trainer = Trainer(myloss, mymetric, optimizer, MODEL_NAME, None, DEVICE)
+    trainer = Trainer(myloss, mymetric, optimizer, MODEL_NAME, model, None, DEVICE)
 
     train_loader = torch.utils.data.DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
     val_loader = torch.utils.data.DataLoader(val_ds, batch_size=BATCH_SIZE, num_workers=WORKERS)
@@ -137,8 +138,8 @@ def main(config):
     model.to(DEVICE)
 
     for i in range(EPOCHS):
-        trainer.train(train_loader, model, i)
-        trainer.validate(val_loader, model)
+        trainer.train(train_loader)
+        trainer.validate(val_loader)
 
 
 if __name__ == '__main__':
