@@ -140,13 +140,13 @@ def get_resnet34():
     model.avgpool = nn.Sequential(
         nn.AvgPool2d(7,stride=1),
         nn.Dropout2d(),
-        nn.AvgPool2d(7,stride=1)
+        nn.AvgPool2d(7, stride=1)
     )
 
     model.fc = nn.Sequential(
-        nn.Linear(model.fc.in_features, 768),
+        nn.Linear(8192, 2048),
         nn.Dropout(),
-        nn.Linear(768, 28)
+        nn.Linear(2048, 28)
     )
 
     return model
