@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 import torch
 import torch.nn as nn
-from torchvision.models import resnet152
+from torchvision.models import resnet152, resnet34
 import os.path as osp
 
 from pretrainedmodels.models.senet import se_resnext50_32x4d, senet154
@@ -65,7 +65,7 @@ def get_se_resnext50():
     inplanes = 64
     conv0 = nn.Conv2d(4, inplanes, kernel_size=7, stride=2,
                       padding=3, bias=False)
-    w = conv0.weight
+    w = model.layer0[0].weight
     conv0.weight = torch.nn.Parameter(torch.cat((w, torch.mean(w, dim=1).unsqueeze(1)), dim=1))
 
     layer0_modules = [('conv1', conv0), ('bn1', nn.BatchNorm2d(inplanes)),
@@ -73,10 +73,16 @@ def get_se_resnext50():
                                                                               ceil_mode=True))]
     model.layer0 = nn.Sequential(OrderedDict(layer0_modules))
 
+    model.avg_pool = nn.Sequential(
+        nn.AvgPool2d(11, stride=1),
+        nn.Dropout2d(0.3),
+        nn.AvgPool2d(4, stride=2),
+    )
+
     model.last_linear = nn.Sequential(
-        nn.Linear(model.last_linear.in_features, 768),
+        nn.Linear(8192, 1024),
         nn.Dropout(),
-        nn.Linear(768, 28)
+        nn.Linear(1024, 28)
     )
 
     model = nn.DataParallel(model)
@@ -87,7 +93,7 @@ def get_se_resnext50():
 def get_senet154():
     model = senet154(pretrained=None)
 
-    inplanes = 128
+    inplanes = 64
     layer0_modules = [
         ('conv1', nn.Conv2d(4, 64, 3, stride=2, padding=1,
                             bias=False)),
@@ -107,6 +113,12 @@ def get_senet154():
 
     model.layer0 = nn.Sequential(OrderedDict(layer0_modules))
 
+    model.avg_pool = nn.Sequential(
+        nn.AvgPool2d(7, stride=1),
+        nn.Dropout2d(0.3),
+        nn.AvgPool2d(7, stride=1)
+    )
+
     model.last_linear = nn.Sequential(
         nn.Linear(model.last_linear.in_features, 768),
         nn.Dropout(),
@@ -117,11 +129,29 @@ def get_senet154():
     return model
 
 
+def get_resnet34():
+    model = resnet34(pretrained=True)
+    w = model.conv1.weight
+    model.conv1 = nn.Conv2d(4, 64, kernel_size=7, stride=2, padding=3,
+                            bias=False)
+    w = torch.nn.Parameter(torch.cat((w, torch.mean(w, dim=1).unsqueeze(1)), dim=1))
+    model.conv1.weight = w
+
+    model.fc = nn.Sequential(
+        nn.Linear(model.fc.in_features, 768),
+        nn.Dropout(),
+        nn.Linear(768, 28)
+    )
+
+    return model
+
+
 mdl2name = {
     'resnet152': get_resnet152,
     'se_resnet152': get_se_resnet152,
     'se_resnext50': get_se_resnext50,
     'senet154': get_senet154,
+    'resnet34': get_resnet34
 }
 
 
