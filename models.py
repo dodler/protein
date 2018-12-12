@@ -137,6 +137,12 @@ def get_resnet34():
     w = torch.nn.Parameter(torch.cat((w, torch.mean(w, dim=1).unsqueeze(1)), dim=1))
     model.conv1.weight = w
 
+    model.avgpool = nn.Sequential(
+        nn.AvgPool2d(7,stride=1),
+        nn.Dropout2d(),
+        nn.AvgPool2d(7,stride=1)
+    )
+
     model.fc = nn.Sequential(
         nn.Linear(model.fc.in_features, 768),
         nn.Dropout(),
