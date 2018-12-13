@@ -468,9 +468,9 @@ else:
     print('Fractions (th = 0.5): ', (pred_t > 0.5).mean(axis=0))
 
     save_pred(pred_t, th_t, 'protein_classification_f.csv')
-
     save_pred(pred_t, th, 'protein_classification_v.csv')
     save_pred(pred_t, 0.5, 'protein_classification_05.csv')
+    save_pred(pred_t, 0.3, 'protein_classification_03.csv')
 
     class_list = [8, 9, 10, 15, 20, 24, 27]
     for i in class_list:
