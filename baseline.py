@@ -2,6 +2,7 @@
 import os
 import sys
 
+from sklearn.metrics import f1_score
 import cv2
 import numpy as np
 import pandas as pd
@@ -49,6 +50,7 @@ TARGET_SIZE = 512
 aug = Compose([
     HorizontalFlip(p=0.7),
     RandomGamma(p=0.3),
+    GridDistortion(p=0.3),
     Resize(height=TARGET_SIZE, width=TARGET_SIZE)
 ])
 
@@ -105,13 +107,13 @@ class FocalLoss(nn.Module):
 
 
 THRESHOLD = 0.0
-loss = FocalLoss()
+loss = nn.BCEWithLogitsLoss()
 
 
 def mymetric(pred, target):
     preds = (pred > THRESHOLD).int()
     targs = target.int()
-    return (preds == targs).float().mean()
+    return f1_score(targs.cpu().detach().numpy(), preds.cpu().detach().numpy(), average='macro')
 
 
 def myloss(pred, target):

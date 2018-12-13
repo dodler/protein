@@ -47,15 +47,13 @@ name_label_dict = {
     27: 'Rods & rings'}
 
 nw = 6  # number of workers for data loader
-arch = resnet34  # specify target architecture
-
+arch = resnext50  # specify target architecture
 
 PATH = '/home/kaggleprotein/lyan/data/'
 TRAIN = PATH + 'protein/train/'
 TEST = PATH + 'protein/test/'
 LABELS = PATH + 'protein/train.csv'
 SAMPLE = PATH + 'protein/sample_submission.csv'
-
 
 train_names = [f[:36] for f in os.listdir(TRAIN)]
 test_names = [f[:36] for f in os.listdir(TEST)]
@@ -84,7 +82,7 @@ class pdFilesDataset(FilesDataset):
             return cv2.resize(img, (self.sz, self.sz), cv2.INTER_AREA)
 
     def get_y(self, i):
-        if (self.path == TEST):
+        if self.path == TEST:
             return np.zeros(len(name_label_dict), dtype=np.int)
         else:
             labels = self.labels.loc[self.fnames[i]]['Target']
@@ -363,16 +361,16 @@ if sys.argv[1] == 'train':
     learner.unfreeze()
     lrs = np.array([lr / 10, lr / 3, lr])
 
-    learner.fit(lrs / 4, 4, cycle_len=2, use_clr=(10, 20))
+    learner.fit(lrs / 4, 2, cycle_len=2, use_clr=(10, 20))
 
     learner.fit(lrs / 4, 2, cycle_len=3, use_clr=(10, 20))
 
-    learner.fit(lrs/16,1,cycle_len=4,use_clr=(5,20))
+    learner.fit(lrs / 16, 1, cycle_len=4, use_clr=(5, 20))
 
-    learner.save('ResNet34_512_1')
+    learner.save('Resnext50_512_1')
 else:
     print('start submit')
-    learner.load('ResNet34_512_1')
+    learner.load('Resnext50_512_1')
     print('load succses')
 
 
@@ -382,48 +380,7 @@ else:
 
     preds, y = learner.TTA(n_aug=16)
     preds = np.stack(preds, axis=-1)
-    preds = sigmoid_np(preds)
-    pred = preds.max(axis=-1)
 
-
-    def F1_soft(preds, targs, th=0.5, d=50.0):
-        preds = sigmoid_np(d * (preds - th))
-        targs = targs.astype(np.float)
-        score = 2.0 * (preds * targs).sum(axis=0) / ((preds + targs).sum(axis=0) + 1e-6)
-        return score
-
-
-    def fit_val(x, y):
-        params = 0.5 * np.ones(len(name_label_dict))
-        wd = 1e-5
-        error = lambda p: np.concatenate((F1_soft(x, y, p) - 1.0,
-                                          wd * (p - 0.5)), axis=None)
-        p, success = opt.leastsq(error, params)
-        return p
-
-
-    th = fit_val(pred, y)
-    th[th < 0.1] = 0.1
-    print('Thresholds: ', th)
-    print('F1 macro: ', f1_score(y, pred > th, average='macro'))
-    print('F1 macro (th = 0.5): ', f1_score(y, pred > 0.5, average='macro'))
-    print('F1 micro: ', f1_score(y, pred > th, average='micro'))
-
-    print('Fractions: ', (pred > th).mean(axis=0))
-    print('Fractions (true): ', (y > th).mean(axis=0))
-
-    preds_t, y_t = learner.TTA(n_aug=16, is_test=True)
-    preds_t = np.stack(preds_t, axis=-1)
-    preds_t = sigmoid_np(preds_t)
-    pred_t = preds_t.max(axis=-1)  # max works better for F1 macro score
-
-
-    def sigmoid_np(x):
-        return 1.0 / (1.0 + np.exp(-x))
-
-
-    preds, y = learner.TTA(n_aug=16)
-    preds = np.stack(preds, axis=-1)
     preds = sigmoid_np(preds)
     pred = preds.max(axis=-1)
 
