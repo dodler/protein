@@ -46,14 +46,34 @@ name_label_dict = {
     26: 'Cytoplasmic bodies',
     27: 'Rods & rings'}
 
-nw = 6  # number of workers for data loader
-arch = resnext50  # specify target architecture
-
 PATH = '/home/kaggleprotein/lyan/data/'
 TRAIN = PATH + 'protein/train/'
 TEST = PATH + 'protein/test/'
 LABELS = PATH + 'protein/train.csv'
 SAMPLE = PATH + 'protein/sample_submission.csv'
+
+nw = 6  # number of workers for data loader
+
+
+def get_arch(model_name):
+    if model_name == 'resnet34':
+        return resnet34
+    elif model_name == 'fa_resnet34':
+        return fa_resnet34
+    elif model_name == 'resnext50':
+        return resnext50
+    else: raise Exception('unknown model:' + model_name)
+
+
+if len(sys.argv) != 3:
+    raise Exception('should be used as the following: python fastai_learn.py train {model_name}')
+
+MODEL_NAME = sys.argv[2]
+mode = sys.argv[1]
+
+print(MODEL_NAME, mode)
+
+arch = get_arch(MODEL_NAME)
 
 train_names = [f[:36] for f in os.listdir(TRAIN)]
 test_names = [f[:36] for f in os.listdir(TEST)]
@@ -103,14 +123,11 @@ class pdFilesDataset(FilesDataset):
         return len(name_label_dict)  # number of classes
 
 
-# In[6]:
-
-
 def get_data(sz, bs):
     # data augmentation
     aug_tfms = [RandomRotate(30, tfm_y=TfmType.NO),
                 RandomDihedral(tfm_y=TfmType.NO),
-                RandomLighting(0.05, 0.05, tfm_y=TfmType.NO)]
+                RandomLighting(0.1, 0.1, tfm_y=TfmType.NO)]
     # mean and std in of each channel in the train set
     stats = A([0.08069, 0.05258, 0.05487, 0.08282], [0.13704, 0.10145, 0.15313, 0.13814])
     tfms = tfms_from_stats(stats, sz, crop_type=CropType.NO, tfm_y=TfmType.NO,
@@ -123,13 +140,6 @@ def get_data(sz, bs):
 
 channel_avr, channel_std = (np.array([0.08695, 0.05979, 0.06528, 0.08915]),
                             np.array([0.13044, 0.09801, 0.14846, 0.13298]))
-
-bs = 64
-sz = 512
-md = get_data(sz, bs)
-
-x, y = next(iter(md.trn_dl))
-x.shape, y.shape
 
 
 class FocalLoss(nn.Module):
@@ -345,14 +355,14 @@ sz = 512  # image size
 bs = 48  # batch size
 
 md = get_data(sz, bs)
-print(md)
+
 learner = ConvLearner.pretrained(arch, md, ps=0.5)  # dropout 50%
 learner.opt_fn = optim.Adam
 learner.clip = 1.0  # gradient clipping
 learner.crit = FocalLoss()
 learner.metrics = [acc]
 
-if sys.argv[1] == 'train':
+if mode == 'train':
     print('start training')
 
     lr = 2e-2
@@ -367,10 +377,11 @@ if sys.argv[1] == 'train':
 
     learner.fit(lrs / 16, 1, cycle_len=4, use_clr=(5, 20))
 
-    learner.save('Resnext50_512_1')
+    learner.save(MODEL_NAME)
+
 else:
     print('start submit')
-    learner.load('Resnext50_512_1')
+    learner.load(MODEL_NAME)
     print('load succses')
 
 
@@ -412,6 +423,9 @@ else:
     print('Fractions (true): ', (y > th).mean(axis=0))
 
     preds_t, y_t = learner.TTA(n_aug=16, is_test=True)
+
+    pickle.dump(preds_t, open(MODEL_NAME + '_pred.pkl', 'wb'))
+
     preds_t = np.stack(preds_t, axis=-1)
     preds_t = sigmoid_np(preds_t)
     pred_t = preds_t.max(axis=-1)  # max works better for F1 macro score

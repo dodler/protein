@@ -16,7 +16,7 @@ from albumentations import (
     GridDistortion,
     OpticalDistortion,
     RandomGamma,
-    Resize)
+    Resize, Rotate, Transpose, VerticalFlip)
 from sklearn.model_selection import train_test_split
 from training.training import Trainer
 
@@ -49,12 +49,15 @@ TARGET_SIZE = 512
 
 aug = Compose([
     HorizontalFlip(p=0.7),
-    RandomGamma(p=0.3),
-    GridDistortion(p=0.3),
-    Resize(height=TARGET_SIZE, width=TARGET_SIZE)
+    VerticalFlip(p=0.7),
+    Transpose(p=0.7),
+    Rotate(30, p=0.7),
+    # RandomGamma(p=0.3),
+    # GridDistortion(p=0.3),
+    # Resize(height=TARGET_SIZE, width=TARGET_SIZE)
 ])
 
-val_aug = Resize(height=TARGET_SIZE, width=TARGET_SIZE)
+val_aug = None #Resize(height=TARGET_SIZE, width=TARGET_SIZE)
 
 
 class ProteinDataset:
@@ -107,7 +110,7 @@ class FocalLoss(nn.Module):
 
 
 THRESHOLD = 0.0
-loss = nn.BCEWithLogitsLoss()
+loss = FocalLoss()
 
 
 def mymetric(pred, target):
