@@ -19,7 +19,7 @@ def get_net():
 
 
 def get_resnet152():
-    model = se_resnext101_32x4d()
+    model = se_resnext101_32x4d(pretrained='imagenet')
     model.conv1_7x7_s2 = nn.Conv2d(config.channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3))
 
     model.avg_pool = nn.AdaptiveAvgPool2d(1)
