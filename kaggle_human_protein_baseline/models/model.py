@@ -36,9 +36,9 @@ def get_resnet152():
     model.avg_pool = nn.AdaptiveAvgPool2d(1)
 
     model.last_linear = nn.Sequential(
-        nn.BatchNorm1d(1024),
+        nn.BatchNorm1d(2048),
         nn.Dropout(0.5),
-        nn.Linear(1024, config.num_classes),
+        nn.Linear(2048, config.num_classes),
     )
     return model
 
