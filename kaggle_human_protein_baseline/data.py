@@ -1,6 +1,7 @@
+import cv2
 import torch
 
-from utils import *
+from kaggle_human_protein_baseline.utils import *
 from kaggle_human_protein_baseline.config import *
 from PIL import Image
 from torch.utils.data import Dataset

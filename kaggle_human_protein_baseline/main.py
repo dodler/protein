@@ -1,3 +1,4 @@
+import time
 import warnings
 import os.path as osp
 import random
@@ -6,7 +7,7 @@ from datetime import datetime
 from timeit import default_timer as timer
 
 import pandas as pd
-from models.model import *
+from kaggle_human_protein_baseline.models.model import *
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from torch import nn, optim
@@ -154,13 +155,13 @@ def main():
         os.mkdir("./logs/")
 
     # 4.2 get model
-    model = nn.DataParallel(get_net())
+    model = nn.DataParallel(get_resnet152())
     model.cuda()
 
     # criterion
     optimizer = optim.SGD(model.parameters(), lr=config.lr, momentum=0.9, weight_decay=1e-4)
-    criterion = nn.BCEWithLogitsLoss().cuda()
-    # criterion = FocalLoss().cuda()
+    # criterion = nn.BCEWithLogitsLoss().cuda()
+    criterion = FocalLoss().cuda()
     # criterion = F1Loss().cuda()
     start_epoch = 0
     best_loss = 999
@@ -185,7 +186,7 @@ def main():
 
     scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
     start = timer()
-    '''
+
     for epoch in range(0,config.epochs):
         scheduler.step(epoch)
         # train
@@ -219,7 +220,7 @@ def main():
             )
         log.write("\n")
         time.sleep(0.01)
-    '''
+
     best_mdl_path = "%s/%s_fold_%s_model_best_loss.pth.tar" % (config.best_models, config.model_name, str(fold))
     if osp.exists(best_mdl_path):
         best_model = torch.load(
