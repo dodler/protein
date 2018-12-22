@@ -22,7 +22,7 @@ def get_resnet152():
     model = se_resnext101_32x4d(pretrained='imagenet')
     inplanes = 64
     layer0_modules = [
-        ('conv1', nn.Conv2d(3, inplanes, kernel_size=7, stride=2,
+        ('conv1', nn.Conv2d(4, inplanes, kernel_size=7, stride=2,
                             padding=3, bias=False)),
         ('bn1', nn.BatchNorm2d(inplanes)),
         ('relu1', nn.ReLU(inplace=True)),
