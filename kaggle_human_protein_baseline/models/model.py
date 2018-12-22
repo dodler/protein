@@ -20,7 +20,18 @@ def get_net():
 
 def get_resnet152():
     model = se_resnext101_32x4d(pretrained='imagenet')
-    model.conv1_7x7_s2 = nn.Conv2d(config.channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3))
+    inplanes = 64
+    layer0_modules = [
+        ('conv1', nn.Conv2d(3, inplanes, kernel_size=7, stride=2,
+                            padding=3, bias=False)),
+        ('bn1', nn.BatchNorm2d(inplanes)),
+        ('relu1', nn.ReLU(inplace=True)),
+    ]
+    # To preserve compatibility with Caffe weights `ceil_mode=True`
+    # is used instead of `padding=1`.
+    layer0_modules.append(('pool', nn.MaxPool2d(3, stride=2,
+                                                ceil_mode=True)))
+    model.layer0 = nn.Sequential(OrderedDict(layer0_modules))
 
     model.avg_pool = nn.AdaptiveAvgPool2d(1)
 
