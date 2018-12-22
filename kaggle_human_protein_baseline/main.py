@@ -1,30 +1,22 @@
-import os
-import time
-import json
-import torch
-import random
 import warnings
-import torchvision
-import numpy as np
-import pandas as pd
 import os.path as osp
 import random
-
-from kaggle_human_protein_baseline.utils import Logger
-from kaggle_human_protein_baseline.utils import *
-from kaggle_human_protein_baseline.data import HumanDataset
-from tqdm import tqdm
-from kaggle_human_protein_baseline.config import config
+import warnings
 from datetime import datetime
-from models.model import *
-from torch import nn, optim
-from collections import OrderedDict
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
-from torch.optim import lr_scheduler
-from sklearn.model_selection import train_test_split
 from timeit import default_timer as timer
+
+import pandas as pd
+from models.model import *
 from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
+from torch import nn, optim
+from torch.optim import lr_scheduler
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+
+from kaggle_human_protein_baseline.config import config
+from kaggle_human_protein_baseline.data import HumanDataset
+from kaggle_human_protein_baseline.utils import *
 
 # 1. set random seed
 random.seed(2050)
