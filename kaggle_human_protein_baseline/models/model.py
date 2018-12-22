@@ -29,4 +29,5 @@ def get_resnet152():
         nn.Dropout(0.5),
         nn.Linear(1024, config.num_classes),
     )
+    return model
 
