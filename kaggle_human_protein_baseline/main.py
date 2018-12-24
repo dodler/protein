@@ -155,7 +155,7 @@ def main():
         os.mkdir("./logs/")
 
     # 4.2 get model
-    model = nn.DataParallel(get_resnet152())
+    model = nn.DataParallel(get_densenet121())
     model.cuda()
 
     # criterion

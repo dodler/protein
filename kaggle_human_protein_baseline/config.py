@@ -10,7 +10,7 @@ class DefaultConfigs(object):
     img_height = 512
     channels = 4
     lr = 0.03
-    batch_size = 64
+    batch_size = 10
     epochs = 50
 
 config = DefaultConfigs()
